@@ -3,13 +3,13 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/golang/protobuf/proto"
+	"github.com/google/cloudprober/probes/external/serverutils"
 	"github.com/tevino/tcp-shaker"
 	"log"
+	"strconv"
 	"strings"
 	"time"
-	"github.com/google/cloudprober/probes/external/serverutils"
-	"github.com/golang/protobuf/proto"
-	"strconv"
 )
 
 var address = flag.String("address", "", "Address of target host")
@@ -39,13 +39,6 @@ func main() {
 
 	flag.Parse()
 
-	if *address == "" {
-		log.Fatal("Error. Host address not set.")
-	}
-	if *port == -1 {
-		log.Fatal("Error. TCP port not set.")
-	}
-
 	if *server {
 		serverutils.Serve(func(request *serverutils.ProbeRequest, reply *serverutils.ProbeReply) {
 			address := ""
@@ -70,12 +63,18 @@ func main() {
 				reply.ErrorMessage = proto.String(err.Error())
 			}
 		})
-	}
+	} else {
+		if *address == "" {
+			log.Fatal("Error. Host address not set.")
+		}
+		if *port == -1 {
+			log.Fatal("Error. TCP port not set.")
+		}
 
-	payload, err := probe(address, port)
-	if err != nil {
-		log.Fatal(err)
+		payload, err := probe(address, port)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println(payload)
 	}
-	fmt.Println(payload)
-
 }
